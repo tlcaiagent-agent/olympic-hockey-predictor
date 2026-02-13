@@ -684,7 +684,7 @@ summary.innerHTML=`<div class="scorecard">
 <div class="scorecard-grid">
 <div class="sc-item"><div class="sc-value">${modelBeatMarketCount}/3</div><div class="sc-label">Model Beat Market on Winner</div></div>
 <div class="sc-item"><div class="sc-value">${totalBets}</div><div class="sc-label">Value Bets Found</div></div>
-<div class="sc-item"><div class="sc-value ${totalPL>=0?'" style="color:var(--green)':'}" style="color:var(--red)"}>${roi}%</div><div class="sc-label">Overall ROI</div></div>
+<div class="sc-item"><div class="sc-value" style="color:${totalPL>=0?'var(--green)':'var(--red)'}">${roi}%</div><div class="sc-label">Overall ROI</div></div>
 <div class="sc-item"><div class="sc-value">${modelBeatMarketCount>=2?'Yes ✅':'Mixed ⚖️'}</div><div class="sc-label">Model Beats Market?</div></div>
 </div>
 </div>`;
