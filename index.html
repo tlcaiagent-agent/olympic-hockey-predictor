@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Olympic Ice Hockey Bracket Predictor</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0e17;--card:#131a2b;--border:#1e2d4a;--accent:#4fc3f7;--accent2:#0288d1;--text:#e0e6f0;--muted:#7a8ba8;--gold:#ffd700;--silver:#c0c0c0;--bronze:#cd7f32;--win:#4caf50;--lose:#ef5350}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5}
+h1{text-align:center;padding:24px 16px 8px;font-size:1.8rem;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+h2{color:var(--accent);font-size:1.1rem;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px}
+h3{font-size:.95rem;color:var(--muted);margin-bottom:8px}
+.subtitle{text-align:center;color:var(--muted);margin-bottom:24px;font-size:.9rem}
+.container{max-width:1200px;margin:0 auto;padding:0 16px 40px}
+.section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px}
+.sliders{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.slider-group label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:4px;color:var(--muted)}
+.slider-group label span{color:var(--accent);font-weight:600}
+input[type=range]{width:100%;accent-color:var(--accent);background:transparent;height:6px;-webkit-appearance:none;appearance:none;border-radius:3px;background:var(--border)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);cursor:pointer}
+.btn{background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;border:none;padding:12px 28px;border-radius:8px;font-size:1rem;cursor:pointer;font-weight:600;transition:transform .15s,box-shadow .15s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(79,195,247,.3)}
+.btn:active{transform:translateY(0)}
+.btn-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:16px 0}
+.groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.group-card{background:var(--bg);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.group-card h3{padding:10px 14px;background:var(--border);margin:0;color:var(--accent);font-size:.9rem}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{text-align:left;padding:8px 10px;color:var(--muted);font-weight:600;font-size:.75rem;text-transform:uppercase;border-bottom:1px solid var(--border)}
+td{padding:7px 10px;border-bottom:1px solid rgba(30,45,74,.4)}
+tr:last-child td{border:none}
+.flag{width:20px;height:14px;border-radius:2px;display:inline-block;vertical-align:middle;margin-right:6px;background:var(--border);font-size:10px;text-align:center;line-height:14px}
+.wp{color:var(--win);font-weight:600}
+.bracket{overflow-x:auto;padding:16px 0}
+.bracket-grid{display:flex;gap:0;min-width:900px;align-items:center}
+.round{display:flex;flex-direction:column;justify-content:center;gap:20px;min-width:200px}
+.round-label{text-align:center;font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.matchup{background:var(--bg);border:1px solid var(--border);border-radius:8px;overflow:hidden;font-size:.85rem}
+.matchup .team-row{display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid rgba(30,45,74,.3)}
+.matchup .team-row:last-child{border:none}
+.matchup .team-row.winner{background:rgba(79,195,247,.08)}
+.matchup .pct{color:var(--accent);font-weight:600;min-width:40px;text-align:right}
+.connector{min-width:30px;position:relative}
+.sim-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:12px}
+.sim-card{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center}
+.sim-card .name{font-weight:600;font-size:.85rem;margin-bottom:6px}
+.sim-card .medals{display:flex;justify-content:center;gap:8px;font-size:.75rem}
+.sim-card .medals span{display:flex;flex-direction:column;align-items:center}
+.sim-card .medals .g{color:var(--gold)}
+.sim-card .medals .s{color:var(--silver)}
+.sim-card .medals .b{color:var(--bronze)}
+.bar{height:4px;border-radius:2px;background:var(--border);margin-top:6px;overflow:hidden}
+.bar-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s}
+.podium{display:flex;justify-content:center;gap:24px;margin:16px 0;flex-wrap:wrap}
+.podium-spot{text-align:center;padding:16px;border-radius:8px;background:var(--bg);border:1px solid var(--border);min-width:120px}
+.podium-spot .medal{font-size:2rem}
+.podium-spot .team-name{font-weight:700;margin:4px 0}
+.podium-spot .prob{color:var(--muted);font-size:.85rem}
+.loading{display:none;text-align:center;padding:20px;color:var(--accent)}
+.loading.show{display:block}
+@media(max-width:600px){h1{font-size:1.3rem}.round{min-width:160px}.bracket-grid{min-width:700px}}
+</style>
+</head>
+<body>
+<h1>🏒 Olympic Ice Hockey Bracket Predictor</h1>
+<p class="subtitle">Adjust weights, predict groups & knockout rounds, run Monte Carlo simulations</p>
+<div class="container">
+  <div class="section">
+    <h2>⚙️ Factor Weights</h2>
+    <div class="sliders" id="sliders"></div>
+    <div class="btn-row">
+      <button class="btn" onclick="predict()">🔮 Predict Bracket</button>
+      <button class="btn" onclick="runMonteCarlo()" style="background:linear-gradient(135deg,#7b1fa2,#ce93d8)">🎲 Run 10,000 Simulations</button>
+    </div>
+  </div>
+  <div class="section">
+    <h2>📋 Group Stage</h2>
+    <div class="groups" id="groups"></div>
+  </div>
+  <div class="section">
+    <h2>🏆 Knockout Bracket</h2>
+    <div class="bracket" id="bracket"></div>
+  </div>
+  <div class="section" id="sim-section" style="display:none">
+    <h2>🎲 Monte Carlo Results (10,000 Simulations)</h2>
+    <div class="podium" id="podium"></div>
+    <div class="sim-results" id="sim-results"></div>
+  </div>
+</div>
+<script>
+const TEAMS=[
+{name:"Canada",code:"CAN",rank:1,history:38,form:92,depth:96,goalie:93},
+{name:"Finland",code:"FIN",rank:2,history:15,form:95,depth:88,goalie:90},
+{name:"USA",code:"USA",rank:3,history:15,form:88,depth:91,goalie:87},
+{name:"Sweden",code:"SWE",rank:4,history:18,form:85,depth:87,goalie:85},
+{name:"Czech Republic",code:"CZE",rank:5,history:7,form:82,depth:80,goalie:82},
+{name:"Switzerland",code:"SUI",rank:6,history:2,form:80,depth:75,goalie:84},
+{name:"Germany",code:"GER",rank:7,history:0,form:78,depth:70,goalie:76},
+{name:"Slovakia",code:"SVK",rank:8,history:0,form:72,depth:68,goalie:74},
+{name:"Latvia",code:"LAT",rank:9,history:0,form:65,depth:58,goalie:70},
+{name:"Denmark",code:"DEN",rank:10,history:0,form:63,depth:55,goalie:68},
+{name:"Norway",code:"NOR",rank:11,history:0,form:60,depth:52,goalie:65},
+{name:"ROC",code:"ROC",rank:12,history:25,form:58,depth:65,goalie:72}
+];
+
+const FACTORS=[
+{id:"rank",label:"World Ranking",default:25},
+{id:"history",label:"Olympic History",default:15},
+{id:"form",label:"Recent Form",default:25},
+{id:"depth",label:"Team Depth",default:20},
+{id:"goalie",label:"Goaltending",default:15}
+];
+
+let weights={};
+let currentGroups=null;
+let currentBracket=null;
+
+function init(){
+const c=document.getElementById("sliders");
+FACTORS.forEach(f=>{
+weights[f.id]=f.default;
+const d=document.createElement("div");d.className="slider-group";
+d.innerHTML=`<label>${f.label} <span id="v_${f.id}">${f.default}</span></label><input type="range" min="0" max="100" value="${f.default}" oninput="weights['${f.id}']=+this.value;document.getElementById('v_${f.id}').textContent=this.value">`;
+c.appendChild(d);
+});
+predict();
+}
+
+function teamScore(t){
+const w=weights,total=w.rank+w.history+w.form+w.depth+w.goalie||1;
+const rankScore=(13-t.rank)/12*100;
+const histScore=Math.min(t.history/40*100,100);
+return(rankScore*w.rank+histScore*w.history+t.form*w.form+t.depth*w.depth+t.goalie*w.goalie)/total;
+}
+
+function winProb(a,b){
+const sa=teamScore(a),sb=teamScore(b);
+const diff=sa-sb;
+return 1/(1+Math.pow(10,-diff/25));
+}
+
+function seedGroups(){
+const sorted=[...TEAMS].sort((a,b)=>teamScore(b)-teamScore(a));
+const pots=[sorted.slice(0,3),sorted.slice(3,6),sorted.slice(6,9),sorted.slice(9,12)];
+const groups=[[],[],[]];
+pots.forEach(pot=>{
+const shuffled=pot.sort(()=>Math.random()-.5);
+shuffled.forEach((t,i)=>groups[i].push(t));
+});
+return groups;
+}
+
+function simulateGroup(group){
+const pts={},gd={};
+group.forEach(t=>{pts[t.code]=0;gd[t.code]=0});
+for(let i=0;i<group.length;i++){
+for(let j=i+1;j<group.length;j++){
+const p=winProb(group[i],group[j]);
+// Expected points
+pts[group[i].code]+=p*3+(1-p)*0;
+pts[group[j].code]+=(1-p)*3+0;
+gd[group[i].code]+=p*2-(1-p)*1;
+gd[group[j].code]+=(1-p)*2-p*1;
+}
+}
+return group.map(t=>({...t,pts:pts[t.code],gd:gd[t.code]})).sort((a,b)=>b.pts-a.pts||b.gd-a.gd);
+}
+
+function simulateGroupRandom(group){
+const pts={};
+group.forEach(t=>{pts[t.code]=0});
+for(let i=0;i<group.length;i++){
+for(let j=i+1;j<group.length;j++){
+const p=winProb(group[i],group[j]);
+const r=Math.random();
+if(r<p){pts[group[i].code]+=3}
+else{pts[group[j].code]+=3}
+}
+}
+return[...group].sort((a,b)=>pts[b.code]-pts[a.code]||Math.random()-.5);
+}
+
+function predict(){
+const groups=seedGroups();
+currentGroups=groups;
+renderGroups(groups);
+const standings=groups.map(g=>simulateGroup(g));
+// QF: 1st each group + best 4th vs worst group winners cross, etc
+// Simplified Olympic format: top 2 from each group + 2 best 3rd = 8 teams
+const qualified=[];
+const thirds=[];
+standings.forEach(s=>{qualified.push(s[0],s[1]);thirds.push(s[2])});
+thirds.sort((a,b)=>b.pts-a.pts);
+qualified.push(thirds[0],thirds[1]);
+// QF matchups: 1A vs 3rd, 1B vs 2C, 1C vs 2A-ish... simplified seeding
+const seeded=qualified.sort((a,b)=>teamScore(b)-teamScore(a));
+const qf=[[seeded[0],seeded[7]],[seeded[1],seeded[6]],[seeded[2],seeded[5]],[seeded[3],seeded[4]]];
+const sf=[];
+qf.forEach(([a,b])=>{const p=winProb(a,b);sf.push(p>=.5?a:b)});
+const fin=[[sf[0],sf[1]],[sf[2],sf[3]]];
+const gold=[];const bronze=[];
+fin.forEach(([a,b])=>{const p=winProb(a,b);if(p>=.5){gold.push(a);bronze.push(b)}else{gold.push(b);bronze.push(a)}});
+const champion=winProb(gold[0],gold[1])>=.5?gold[0]:gold[1];
+currentBracket={qf,sf,fin,seeded};
+renderBracket(qf,seeded);
+}
+
+function renderGroups(groups){
+const c=document.getElementById("groups");
+c.innerHTML="";
+groups.forEach((g,i)=>{
+const standings=simulateGroup(g);
+let html=`<div class="group-card"><h3>Group ${String.fromCharCode(65+i)}</h3><table><tr><th>Team</th><th>Pts (exp)</th><th>Adv %</th></tr>`;
+standings.forEach((t,j)=>{
+const advProb=j<2?Math.round(70+t.pts/9*30):Math.round(Math.max(0,t.pts/9*50));
+html+=`<tr><td><span class="flag">${t.code.substring(0,2)}</span>${t.name}</td><td>${t.pts.toFixed(1)}</td><td class="wp">${advProb}%</td></tr>`;
+});
+html+=`</table></div>`;
+c.innerHTML+=html;
+});
+}
+
+function renderBracket(qf,seeded){
+const c=document.getElementById("bracket");
+// Build full bracket
+const sf=[[],[]], finals=[], bronze=[];
+qf.forEach(([a,b],i)=>{const p=winProb(a,b);sf[Math.floor(i/2)].push(p>=.5?{t:a,p:Math.max(p,1-p)}:{t:b,p:Math.max(p,1-p)})});
+
+let html=`<div class="bracket-grid">`;
+// QF round
+html+=`<div class="round"><div class="round-label">Quarterfinals</div>`;
+qf.forEach(([a,b])=>{
+const p=winProb(a,b);
+const pw=Math.round(Math.max(p,1-p)*100);
+html+=`<div class="matchup"><div class="team-row ${p>=.5?'winner':''}"><span>${a.name}</span><span class="pct">${Math.round(p*100)}%</span></div><div class="team-row ${p<.5?'winner':''}"><span>${b.name}</span><span class="pct">${Math.round((1-p)*100)}%</span></div></div>`;
+});
+html+=`</div><div class="connector"></div>`;
+
+// SF
+const sfTeams=qf.map(([a,b])=>{const p=winProb(a,b);return p>=.5?a:b});
+html+=`<div class="round"><div class="round-label">Semifinals</div>`;
+for(let i=0;i<4;i+=2){
+const a=sfTeams[i],b=sfTeams[i+1];
+const p=winProb(a,b);
+html+=`<div class="matchup"><div class="team-row ${p>=.5?'winner':''}"><span>${a.name}</span><span class="pct">${Math.round(p*100)}%</span></div><div class="team-row ${p<.5?'winner':''}"><span>${b.name}</span><span class="pct">${Math.round((1-p)*100)}%</span></div></div>`;
+}
+html+=`</div><div class="connector"></div>`;
+
+// Finals
+const finTeams=[];const losers=[];
+for(let i=0;i<4;i+=2){
+const a=sfTeams[i],b=sfTeams[i+1];
+const p=winProb(a,b);
+if(p>=.5){finTeams.push(a);losers.push(b)}else{finTeams.push(b);losers.push(a)}
+}
+html+=`<div class="round"><div class="round-label">Gold Medal Game</div>`;
+const fp=winProb(finTeams[0],finTeams[1]);
+html+=`<div class="matchup"><div class="team-row ${fp>=.5?'winner':''}"><span>🥇 ${finTeams[0].name}</span><span class="pct">${Math.round(fp*100)}%</span></div><div class="team-row ${fp<.5?'winner':''}"><span>🥇 ${finTeams[1].name}</span><span class="pct">${Math.round((1-fp)*100)}%</span></div></div>`;
+// Bronze
+const bp=winProb(losers[0],losers[1]);
+html+=`<div class="round-label" style="margin-top:16px">Bronze Medal Game</div>`;
+html+=`<div class="matchup"><div class="team-row ${bp>=.5?'winner':''}"><span>🥉 ${losers[0].name}</span><span class="pct">${Math.round(bp*100)}%</span></div><div class="team-row ${bp<.5?'winner':''}"><span>🥉 ${losers[1].name}</span><span class="pct">${Math.round((1-bp)*100)}%</span></div></div>`;
+html+=`</div></div>`;
+c.innerHTML=html;
+}
+
+function runMonteCarlo(){
+const N=10000;
+const medals={};
+TEAMS.forEach(t=>{medals[t.code]={name:t.name,gold:0,silver:0,bronze:0}});
+for(let sim=0;sim<N;sim++){
+const groups=seedGroups();
+const standings=groups.map(g=>simulateGroupRandom(g));
+const qualified=[];const thirds=[];
+standings.forEach(s=>{qualified.push(s[0],s[1]);thirds.push(s[2])});
+thirds.sort((a,b)=>teamScore(b)-teamScore(a)+Math.random()*.5-.25);
+qualified.push(thirds[0],thirds[1]);
+const seeded=qualified.sort((a,b)=>teamScore(b)-teamScore(a));
+const qf=[[seeded[0],seeded[7]],[seeded[1],seeded[6]],[seeded[2],seeded[5]],[seeded[3],seeded[4]]];
+const sfT=qf.map(([a,b])=>Math.random()<winProb(a,b)?a:b);
+const finT=[],losersT=[];
+for(let i=0;i<4;i+=2){
+const a=sfT[i],b=sfT[i+1];
+if(Math.random()<winProb(a,b)){finT.push(a);losersT.push(b)}else{finT.push(b);losersT.push(a)}
+}
+const goldW=Math.random()<winProb(finT[0],finT[1])?finT[0]:finT[1];
+const silverW=goldW===finT[0]?finT[1]:finT[0];
+const bronzeW=Math.random()<winProb(losersT[0],losersT[1])?losersT[0]:losersT[1];
+medals[goldW.code].gold++;
+medals[silverW.code].silver++;
+medals[bronzeW.code].bronze++;
+}
+const sorted=Object.values(medals).sort((a,b)=>b.gold-a.gold||b.silver-a.silver||b.bronze-a.bronze);
+document.getElementById("sim-section").style.display="block";
+// Podium
+const top3=sorted.slice(0,3);
+const podiumEl=document.getElementById("podium");
+const medalEmoji=["🥇","🥈","🥉"];
+podiumEl.innerHTML=top3.map((t,i)=>`<div class="podium-spot"><div class="medal">${medalEmoji[i]}</div><div class="team-name">${t.name}</div><div class="prob">${(t.gold/N*100).toFixed(1)}% gold</div></div>`).join("");
+// Full table
+const simEl=document.getElementById("sim-results");
+simEl.innerHTML=sorted.map(t=>{
+const gp=(t.gold/N*100),sp=(t.silver/N*100),bp=(t.bronze/N*100);
+return`<div class="sim-card"><div class="name">${t.name}</div><div class="medals"><span class="g">🥇 ${gp.toFixed(1)}%</span><span class="s">🥈 ${sp.toFixed(1)}%</span><span class="b">🥉 ${bp.toFixed(1)}%</span></div><div class="bar"><div class="bar-fill" style="width:${gp}%;background:var(--gold)"></div></div></div>`;
+}).join("");
+document.getElementById("sim-section").scrollIntoView({behavior:"smooth"});
+}
+
+init();
+</script>
+</body>
+</html>
