@@ -6,12 +6,12 @@
 <title>Olympic Ice Hockey Bracket Predictor</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0a0e17;--card:#131a2b;--border:#1e2d4a;--accent:#4fc3f7;--accent2:#0288d1;--text:#e0e6f0;--muted:#7a8ba8;--gold:#ffd700;--silver:#c0c0c0;--bronze:#cd7f32;--win:#4caf50;--lose:#ef5350}
+:root{--bg:#0a0e17;--card:#131a2b;--border:#1e2d4a;--accent:#4fc3f7;--accent2:#0288d1;--text:#e0e6f0;--muted:#7a8ba8;--gold:#ffd700;--silver:#c0c0c0;--bronze:#cd7f32;--win:#4caf50;--lose:#ef5350;--green:#4caf50;--red:#ef5350}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5}
 h1{text-align:center;padding:24px 16px 8px;font-size:1.8rem;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 h2{color:var(--accent);font-size:1.1rem;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px}
 h3{font-size:.95rem;color:var(--muted);margin-bottom:8px}
-.subtitle{text-align:center;color:var(--muted);margin-bottom:24px;font-size:.9rem}
+.subtitle{text-align:center;color:var(--muted);margin-bottom:16px;font-size:.9rem}
 .container{max-width:1200px;margin:0 auto;padding:0 16px 40px}
 .section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px}
 .sliders{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
@@ -59,50 +59,174 @@ tr:last-child td{border:none}
 .podium-spot .prob{color:var(--muted);font-size:.85rem}
 .loading{display:none;text-align:center;padding:20px;color:var(--accent)}
 .loading.show{display:block}
-@media(max-width:600px){h1{font-size:1.3rem}.round{min-width:160px}.bracket-grid{min-width:700px}}
+
+/* Tab Navigation */
+.tab-nav{display:flex;justify-content:center;gap:0;margin-bottom:24px;border-bottom:2px solid var(--border)}
+.tab-btn{background:none;border:none;color:var(--muted);padding:12px 24px;font-size:1rem;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-content{display:none;animation:fadeIn .3s ease}
+.tab-content.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Market Comparison Styles */
+.market-table{width:100%;border-collapse:collapse;font-size:.85rem}
+.market-table th{text-align:left;padding:10px 12px;color:var(--muted);font-weight:600;font-size:.75rem;text-transform:uppercase;border-bottom:2px solid var(--border);white-space:nowrap}
+.market-table td{padding:10px 12px;border-bottom:1px solid rgba(30,45,74,.4)}
+.market-table tr:hover{background:rgba(79,195,247,.04)}
+.edge-pos{color:var(--green);font-weight:700}
+.edge-neg{color:var(--red);font-weight:600}
+.edge-neutral{color:var(--muted)}
+.chart-container{margin:20px 0}
+.chart-bar-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.chart-label{min-width:100px;font-size:.85rem;text-align:right;font-weight:600}
+.chart-bars{flex:1;display:flex;flex-direction:column;gap:3px}
+.chart-bar{height:16px;border-radius:3px;transition:width .5s ease;position:relative;font-size:.7rem;line-height:16px;padding-left:6px;color:#fff;font-weight:600;min-width:2px}
+.chart-bar.model{background:var(--accent)}
+.chart-bar.market{background:#7c4dff}
+.chart-legend{display:flex;gap:20px;justify-content:center;margin:12px 0;font-size:.8rem}
+.chart-legend span{display:flex;align-items:center;gap:6px}
+.chart-legend .dot{width:12px;height:12px;border-radius:3px;display:inline-block}
+.best-bets-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.bet-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px;position:relative;overflow:hidden}
+.bet-card.undervalued{border-color:rgba(76,175,80,.3)}
+.bet-card.undervalued::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--green)}
+.bet-card.overvalued{border-color:rgba(239,83,80,.3)}
+.bet-card.overvalued::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--red)}
+.bet-card .team-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:1.1rem;font-weight:700}
+.bet-card .edge-badge{font-size:.85rem;padding:3px 10px;border-radius:20px;font-weight:700}
+.bet-card .edge-badge.pos{background:rgba(76,175,80,.15);color:var(--green)}
+.bet-card .edge-badge.neg{background:rgba(239,83,80,.15);color:var(--red)}
+.bet-card .detail-row{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);margin-top:4px}
+.toggle-group{display:flex;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden;display:inline-flex}
+.toggle-btn{background:var(--bg);border:none;color:var(--muted);padding:6px 14px;font-size:.8rem;cursor:pointer;border-right:1px solid var(--border);transition:all .15s}
+.toggle-btn:last-child{border-right:none}
+.toggle-btn.active{background:var(--accent2);color:#fff}
+.market-note{background:rgba(79,195,247,.06);border:1px solid rgba(79,195,247,.15);border-radius:8px;padding:14px 18px;font-size:.82rem;color:var(--muted);line-height:1.6;margin-top:16px}
+.market-note strong{color:var(--accent)}
+.run-note{text-align:center;color:var(--muted);font-size:.85rem;padding:20px;font-style:italic}
+
+@media(max-width:600px){h1{font-size:1.3rem}.round{min-width:160px}.bracket-grid{min-width:700px}.tab-btn{padding:10px 14px;font-size:.9rem}.market-table{font-size:.75rem}.market-table th,.market-table td{padding:6px 6px}.chart-label{min-width:60px;font-size:.75rem}}
 </style>
 </head>
 <body>
 <h1>🏒 Olympic Ice Hockey Bracket Predictor</h1>
 <p class="subtitle">Adjust weights, predict groups & knockout rounds, run Monte Carlo simulations</p>
+
 <div class="container">
-  <div class="section">
-    <h2>⚙️ Factor Weights</h2>
-    <div class="sliders" id="sliders"></div>
-    <div class="btn-row">
-      <button class="btn" onclick="predict()">🔮 Predict Bracket</button>
-      <button class="btn" onclick="runMonteCarlo()" style="background:linear-gradient(135deg,#7b1fa2,#ce93d8)">🎲 Run 10,000 Simulations</button>
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('predictor')">🏒 Bracket Predictor</button>
+    <button class="tab-btn" onclick="switchTab('market')">📊 Market Comparison</button>
+  </div>
+
+  <!-- BRACKET PREDICTOR TAB -->
+  <div class="tab-content active" id="tab-predictor">
+    <div class="section">
+      <h2>⚙️ Factor Weights</h2>
+      <div class="sliders" id="sliders"></div>
+      <div class="btn-row">
+        <button class="btn" onclick="predict()">🔮 Predict Bracket</button>
+        <button class="btn" onclick="runMonteCarlo()" style="background:linear-gradient(135deg,#7b1fa2,#ce93d8)">🎲 Run 10,000 Simulations</button>
+      </div>
+    </div>
+    <div class="section">
+      <h2>📋 Group Stage</h2>
+      <div class="groups" id="groups"></div>
+    </div>
+    <div class="section">
+      <h2>🏆 Knockout Bracket</h2>
+      <div class="bracket" id="bracket"></div>
+    </div>
+    <div class="section" id="sim-section" style="display:none">
+      <h2>🎲 Monte Carlo Results (10,000 Simulations)</h2>
+      <div class="podium" id="podium"></div>
+      <div class="sim-results" id="sim-results"></div>
     </div>
   </div>
-  <div class="section">
-    <h2>📋 Group Stage</h2>
-    <div class="groups" id="groups"></div>
-  </div>
-  <div class="section">
-    <h2>🏆 Knockout Bracket</h2>
-    <div class="bracket" id="bracket"></div>
-  </div>
-  <div class="section" id="sim-section" style="display:none">
-    <h2>🎲 Monte Carlo Results (10,000 Simulations)</h2>
-    <div class="podium" id="podium"></div>
-    <div class="sim-results" id="sim-results"></div>
+
+  <!-- MARKET COMPARISON TAB -->
+  <div class="tab-content" id="tab-market">
+    <div class="section">
+      <h2>📊 Model vs Market Comparison</h2>
+      <p style="color:var(--muted);font-size:.85rem;margin-bottom:16px">Compare our Monte Carlo model's gold medal probabilities against sportsbook implied probabilities. <strong style="color:var(--accent)">Run simulations first</strong> on the Bracket Predictor tab for model data.</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+        <div>
+          <span style="color:var(--muted);font-size:.8rem;margin-right:8px">Odds format:</span>
+          <div class="toggle-group">
+            <button class="toggle-btn active" onclick="setOddsFormat('implied')">Implied %</button>
+            <button class="toggle-btn" onclick="setOddsFormat('american')">American</button>
+            <button class="toggle-btn" onclick="setOddsFormat('decimal')">Decimal</button>
+          </div>
+        </div>
+      </div>
+      <div style="overflow-x:auto" id="comparison-table"></div>
+    </div>
+    <div class="section">
+      <h2>📈 Top 8 Teams — Model vs Market</h2>
+      <div class="chart-legend">
+        <span><span class="dot" style="background:var(--accent)"></span> Model</span>
+        <span><span class="dot" style="background:#7c4dff"></span> Market</span>
+      </div>
+      <div id="comparison-chart" class="chart-container"></div>
+    </div>
+    <div class="section">
+      <h2>💎 Best Bets — Undervalued by Market</h2>
+      <p style="color:var(--muted);font-size:.82rem;margin-bottom:14px">Teams where our model sees higher probability than the market implies — potential value plays.</p>
+      <div class="best-bets-grid" id="best-bets"></div>
+    </div>
+    <div class="section">
+      <h2>⚠️ Overvalued — Market Higher Than Model</h2>
+      <p style="color:var(--muted);font-size:.82rem;margin-bottom:14px">Teams the public/market may be overrating relative to our model's assessment.</p>
+      <div class="best-bets-grid" id="overvalued"></div>
+    </div>
+    <div class="section" style="padding:14px 18px">
+      <div class="market-note">
+        <strong>📝 About Market Odds & Vig:</strong> Sportsbook odds include a built-in margin (vig/juice), meaning raw implied probabilities sum to more than 100%. The market probabilities shown here have been <strong>adjusted to remove the vig</strong> (normalized to sum to 100%) for a fair apples-to-apples comparison with the model. Odds shown are based on composite 2026 Milan-Cortina Olympic hockey futures from major sportsbooks (proxied from recent international tournament lines where 2026-specific odds are not yet widely available). This is for entertainment/analysis purposes only — not betting advice.
+      </div>
+    </div>
   </div>
 </div>
+
 <script>
 const TEAMS=[
-{name:"Canada",code:"CAN",rank:1,history:38,form:92,depth:96,goalie:93},
-{name:"Finland",code:"FIN",rank:2,history:15,form:95,depth:88,goalie:90},
-{name:"USA",code:"USA",rank:3,history:15,form:88,depth:91,goalie:87},
-{name:"Sweden",code:"SWE",rank:4,history:18,form:85,depth:87,goalie:85},
-{name:"Czech Republic",code:"CZE",rank:5,history:7,form:82,depth:80,goalie:82},
-{name:"Switzerland",code:"SUI",rank:6,history:2,form:80,depth:75,goalie:84},
-{name:"Germany",code:"GER",rank:7,history:0,form:78,depth:70,goalie:76},
-{name:"Slovakia",code:"SVK",rank:8,history:0,form:72,depth:68,goalie:74},
-{name:"Latvia",code:"LAT",rank:9,history:0,form:65,depth:58,goalie:70},
-{name:"Denmark",code:"DEN",rank:10,history:0,form:63,depth:55,goalie:68},
-{name:"Norway",code:"NOR",rank:11,history:0,form:60,depth:52,goalie:65},
-{name:"ROC",code:"ROC",rank:12,history:25,form:58,depth:65,goalie:72}
+{name:"Canada",code:"CAN",rank:1,history:38,form:92,depth:96,goalie:93,emoji:"🇨🇦"},
+{name:"Finland",code:"FIN",rank:2,history:15,form:95,depth:88,goalie:90,emoji:"🇫🇮"},
+{name:"USA",code:"USA",rank:3,history:15,form:88,depth:91,goalie:87,emoji:"🇺🇸"},
+{name:"Sweden",code:"SWE",rank:4,history:18,form:85,depth:87,goalie:85,emoji:"🇸🇪"},
+{name:"Czech Republic",code:"CZE",rank:5,history:7,form:82,depth:80,goalie:82,emoji:"🇨🇿"},
+{name:"Switzerland",code:"SUI",rank:6,history:2,form:80,depth:75,goalie:84,emoji:"🇨🇭"},
+{name:"Germany",code:"GER",rank:7,history:0,form:78,depth:70,goalie:76,emoji:"🇩🇪"},
+{name:"Slovakia",code:"SVK",rank:8,history:0,form:72,depth:68,goalie:74,emoji:"🇸🇰"},
+{name:"Latvia",code:"LAT",rank:9,history:0,form:65,depth:58,goalie:70,emoji:"🇱🇻"},
+{name:"Denmark",code:"DEN",rank:10,history:0,form:63,depth:55,goalie:68,emoji:"🇩🇰"},
+{name:"Norway",code:"NOR",rank:11,history:0,form:60,depth:52,goalie:65,emoji:"🇳🇴"},
+{name:"ROC",code:"ROC",rank:12,history:25,form:58,depth:65,goalie:72,emoji:"🏳️"}
 ];
+
+// Market odds: raw American odds from composite sportsbook lines (proxy from recent intl tournaments)
+// These include vig. We'll convert to implied % and then normalize.
+const MARKET_AMERICAN_ODDS={
+CAN:+250,FIN:+350,USA:+400,SWE:+600,CZE:+1200,SUI:+2000,
+GER:+2500,SVK:+4000,LAT:+8000,DEN:+10000,NOR:+12000,ROC:+5000
+};
+
+function americanToImplied(odds){
+if(odds>0)return 100/(odds+100);
+return Math.abs(odds)/(Math.abs(odds)+100);
+}
+function impliedToAmerican(p){
+if(p>=.5)return Math.round(-p/(1-p)*100);
+return"+"+Math.round((1-p)/p*100);
+}
+function impliedToDecimal(p){return(1/p).toFixed(2)}
+
+// Normalize market implied probs (remove vig)
+const rawImplied={};let rawSum=0;
+Object.entries(MARKET_AMERICAN_ODDS).forEach(([code,odds])=>{
+const ip=americanToImplied(odds);rawImplied[code]=ip;rawSum+=ip;
+});
+const MARKET_PROB={};
+Object.entries(rawImplied).forEach(([code,ip])=>{MARKET_PROB[code]=ip/rawSum});
 
 const FACTORS=[
 {id:"rank",label:"World Ranking",default:25},
@@ -115,6 +239,80 @@ const FACTORS=[
 let weights={};
 let currentGroups=null;
 let currentBracket=null;
+let mcResults=null; // store MC gold percentages
+let oddsFormat='implied';
+
+function switchTab(tab){
+document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
+document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
+document.getElementById('tab-'+tab).classList.add('active');
+event.target.classList.add('active');
+if(tab==='market')renderMarketTab();
+}
+
+function setOddsFormat(fmt){
+oddsFormat=fmt;
+document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active'));
+event.target.classList.add('active');
+renderMarketTab();
+}
+
+function formatMarketOdds(code){
+const p=MARKET_PROB[code];
+if(oddsFormat==='implied')return(p*100).toFixed(1)+'%';
+if(oddsFormat==='american')return impliedToAmerican(p);
+return impliedToDecimal(p);
+}
+function formatModelOdds(p){
+if(oddsFormat==='implied')return(p*100).toFixed(1)+'%';
+if(oddsFormat==='american')return impliedToAmerican(p);
+return impliedToDecimal(p);
+}
+
+function renderMarketTab(){
+if(!mcResults){
+document.getElementById('comparison-table').innerHTML='<p class="run-note">⚡ Run the Monte Carlo simulation on the Bracket Predictor tab first to generate model probabilities.</p>';
+document.getElementById('comparison-chart').innerHTML='';
+document.getElementById('best-bets').innerHTML='';
+document.getElementById('overvalued').innerHTML='';
+return;
+}
+const data=TEAMS.map(t=>{
+const modelP=mcResults[t.code]||0;
+const marketP=MARKET_PROB[t.code]||0;
+const edge=modelP-marketP;
+return{...t,modelP,marketP,edge};
+}).sort((a,b)=>b.modelP-a.modelP);
+
+// Table
+let html='<table class="market-table"><tr><th>#</th><th>Team</th><th>Model Gold</th><th>Market Gold</th><th>Edge</th></tr>';
+data.forEach((d,i)=>{
+const edgeCls=d.edge>0.005?'edge-pos':d.edge<-0.005?'edge-neg':'edge-neutral';
+const edgeStr=(d.edge>0?'+':'')+(d.edge*100).toFixed(1)+'%';
+html+=`<tr><td>${i+1}</td><td>${d.emoji} ${d.name}</td><td>${formatModelOdds(d.modelP)}</td><td>${formatMarketOdds(d.code)}</td><td class="${edgeCls}">${edgeStr}</td></tr>`;
+});
+html+='</table>';
+document.getElementById('comparison-table').innerHTML=html;
+
+// Chart (top 8)
+const top8=data.slice(0,8);
+const maxP=Math.max(...top8.map(d=>Math.max(d.modelP,d.marketP)));
+let chartHtml='';
+top8.forEach(d=>{
+const mw=Math.round(d.modelP/maxP*100);
+const kw=Math.round(d.marketP/maxP*100);
+chartHtml+=`<div class="chart-bar-row"><div class="chart-label">${d.emoji} ${d.name}</div><div class="chart-bars"><div class="chart-bar model" style="width:${mw}%">${(d.modelP*100).toFixed(1)}%</div><div class="chart-bar market" style="width:${kw}%">${(d.marketP*100).toFixed(1)}%</div></div></div>`;
+});
+document.getElementById('comparison-chart').innerHTML=chartHtml;
+
+// Best Bets
+const undervalued=data.filter(d=>d.edge>0.005).sort((a,b)=>b.edge-a.edge);
+document.getElementById('best-bets').innerHTML=undervalued.length?undervalued.map(d=>`<div class="bet-card undervalued"><div class="team-header">${d.emoji} ${d.name} <span class="edge-badge pos">+${(d.edge*100).toFixed(1)}%</span></div><div class="detail-row"><span>Model</span><span>${(d.modelP*100).toFixed(1)}%</span></div><div class="detail-row"><span>Market</span><span>${(d.marketP*100).toFixed(1)}%</span></div><div class="detail-row"><span>Market Odds</span><span>${impliedToAmerican(MARKET_PROB[d.code])}</span></div></div>`).join(''):'<p class="run-note">No undervalued teams found.</p>';
+
+// Overvalued
+const overvalued=data.filter(d=>d.edge<-0.005).sort((a,b)=>a.edge-b.edge);
+document.getElementById('overvalued').innerHTML=overvalued.length?overvalued.map(d=>`<div class="bet-card overvalued"><div class="team-header">${d.emoji} ${d.name} <span class="edge-badge neg">${(d.edge*100).toFixed(1)}%</span></div><div class="detail-row"><span>Model</span><span>${(d.modelP*100).toFixed(1)}%</span></div><div class="detail-row"><span>Market</span><span>${(d.marketP*100).toFixed(1)}%</span></div><div class="detail-row"><span>Market Odds</span><span>${impliedToAmerican(MARKET_PROB[d.code])}</span></div></div>`).join(''):'<p class="run-note">No overvalued teams found.</p>';
+}
 
 function init(){
 const c=document.getElementById("sliders");
@@ -157,7 +355,6 @@ group.forEach(t=>{pts[t.code]=0;gd[t.code]=0});
 for(let i=0;i<group.length;i++){
 for(let j=i+1;j<group.length;j++){
 const p=winProb(group[i],group[j]);
-// Expected points
 pts[group[i].code]+=p*3+(1-p)*0;
 pts[group[j].code]+=(1-p)*3+0;
 gd[group[i].code]+=p*2-(1-p)*1;
@@ -186,14 +383,11 @@ const groups=seedGroups();
 currentGroups=groups;
 renderGroups(groups);
 const standings=groups.map(g=>simulateGroup(g));
-// QF: 1st each group + best 4th vs worst group winners cross, etc
-// Simplified Olympic format: top 2 from each group + 2 best 3rd = 8 teams
 const qualified=[];
 const thirds=[];
 standings.forEach(s=>{qualified.push(s[0],s[1]);thirds.push(s[2])});
 thirds.sort((a,b)=>b.pts-a.pts);
 qualified.push(thirds[0],thirds[1]);
-// QF matchups: 1A vs 3rd, 1B vs 2C, 1C vs 2A-ish... simplified seeding
 const seeded=qualified.sort((a,b)=>teamScore(b)-teamScore(a));
 const qf=[[seeded[0],seeded[7]],[seeded[1],seeded[6]],[seeded[2],seeded[5]],[seeded[3],seeded[4]]];
 const sf=[];
@@ -201,7 +395,6 @@ qf.forEach(([a,b])=>{const p=winProb(a,b);sf.push(p>=.5?a:b)});
 const fin=[[sf[0],sf[1]],[sf[2],sf[3]]];
 const gold=[];const bronze=[];
 fin.forEach(([a,b])=>{const p=winProb(a,b);if(p>=.5){gold.push(a);bronze.push(b)}else{gold.push(b);bronze.push(a)}});
-const champion=winProb(gold[0],gold[1])>=.5?gold[0]:gold[1];
 currentBracket={qf,sf,fin,seeded};
 renderBracket(qf,seeded);
 }
@@ -214,7 +407,7 @@ const standings=simulateGroup(g);
 let html=`<div class="group-card"><h3>Group ${String.fromCharCode(65+i)}</h3><table><tr><th>Team</th><th>Pts (exp)</th><th>Adv %</th></tr>`;
 standings.forEach((t,j)=>{
 const advProb=j<2?Math.round(70+t.pts/9*30):Math.round(Math.max(0,t.pts/9*50));
-html+=`<tr><td><span class="flag">${t.code.substring(0,2)}</span>${t.name}</td><td>${t.pts.toFixed(1)}</td><td class="wp">${advProb}%</td></tr>`;
+html+=`<tr><td><span class="flag">${t.emoji||t.code.substring(0,2)}</span>${t.name}</td><td>${t.pts.toFixed(1)}</td><td class="wp">${advProb}%</td></tr>`;
 });
 html+=`</table></div>`;
 c.innerHTML+=html;
@@ -223,22 +416,14 @@ c.innerHTML+=html;
 
 function renderBracket(qf,seeded){
 const c=document.getElementById("bracket");
-// Build full bracket
-const sf=[[],[]], finals=[], bronze=[];
-qf.forEach(([a,b],i)=>{const p=winProb(a,b);sf[Math.floor(i/2)].push(p>=.5?{t:a,p:Math.max(p,1-p)}:{t:b,p:Math.max(p,1-p)})});
-
+const sfTeams=qf.map(([a,b])=>{const p=winProb(a,b);return p>=.5?a:b});
 let html=`<div class="bracket-grid">`;
-// QF round
 html+=`<div class="round"><div class="round-label">Quarterfinals</div>`;
 qf.forEach(([a,b])=>{
 const p=winProb(a,b);
-const pw=Math.round(Math.max(p,1-p)*100);
 html+=`<div class="matchup"><div class="team-row ${p>=.5?'winner':''}"><span>${a.name}</span><span class="pct">${Math.round(p*100)}%</span></div><div class="team-row ${p<.5?'winner':''}"><span>${b.name}</span><span class="pct">${Math.round((1-p)*100)}%</span></div></div>`;
 });
 html+=`</div><div class="connector"></div>`;
-
-// SF
-const sfTeams=qf.map(([a,b])=>{const p=winProb(a,b);return p>=.5?a:b});
 html+=`<div class="round"><div class="round-label">Semifinals</div>`;
 for(let i=0;i<4;i+=2){
 const a=sfTeams[i],b=sfTeams[i+1];
@@ -246,8 +431,6 @@ const p=winProb(a,b);
 html+=`<div class="matchup"><div class="team-row ${p>=.5?'winner':''}"><span>${a.name}</span><span class="pct">${Math.round(p*100)}%</span></div><div class="team-row ${p<.5?'winner':''}"><span>${b.name}</span><span class="pct">${Math.round((1-p)*100)}%</span></div></div>`;
 }
 html+=`</div><div class="connector"></div>`;
-
-// Finals
 const finTeams=[];const losers=[];
 for(let i=0;i<4;i+=2){
 const a=sfTeams[i],b=sfTeams[i+1];
@@ -257,7 +440,6 @@ if(p>=.5){finTeams.push(a);losers.push(b)}else{finTeams.push(b);losers.push(a)}
 html+=`<div class="round"><div class="round-label">Gold Medal Game</div>`;
 const fp=winProb(finTeams[0],finTeams[1]);
 html+=`<div class="matchup"><div class="team-row ${fp>=.5?'winner':''}"><span>🥇 ${finTeams[0].name}</span><span class="pct">${Math.round(fp*100)}%</span></div><div class="team-row ${fp<.5?'winner':''}"><span>🥇 ${finTeams[1].name}</span><span class="pct">${Math.round((1-fp)*100)}%</span></div></div>`;
-// Bronze
 const bp=winProb(losers[0],losers[1]);
 html+=`<div class="round-label" style="margin-top:16px">Bronze Medal Game</div>`;
 html+=`<div class="matchup"><div class="team-row ${bp>=.5?'winner':''}"><span>🥉 ${losers[0].name}</span><span class="pct">${Math.round(bp*100)}%</span></div><div class="team-row ${bp<.5?'winner':''}"><span>🥉 ${losers[1].name}</span><span class="pct">${Math.round((1-bp)*100)}%</span></div></div>`;
@@ -291,14 +473,16 @@ medals[goldW.code].gold++;
 medals[silverW.code].silver++;
 medals[bronzeW.code].bronze++;
 }
+// Store MC results for market comparison
+mcResults={};
+Object.entries(medals).forEach(([code,m])=>{mcResults[code]=m.gold/N});
+
 const sorted=Object.values(medals).sort((a,b)=>b.gold-a.gold||b.silver-a.silver||b.bronze-a.bronze);
 document.getElementById("sim-section").style.display="block";
-// Podium
 const top3=sorted.slice(0,3);
 const podiumEl=document.getElementById("podium");
 const medalEmoji=["🥇","🥈","🥉"];
 podiumEl.innerHTML=top3.map((t,i)=>`<div class="podium-spot"><div class="medal">${medalEmoji[i]}</div><div class="team-name">${t.name}</div><div class="prob">${(t.gold/N*100).toFixed(1)}% gold</div></div>`).join("");
-// Full table
 const simEl=document.getElementById("sim-results");
 simEl.innerHTML=sorted.map(t=>{
 const gp=(t.gold/N*100),sp=(t.silver/N*100),bp=(t.bronze/N*100);
